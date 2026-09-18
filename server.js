@@ -1,25 +1,23 @@
-/**
- * 1. express: 서버개발을 쉽게 해주는 라이브러리 집합체
- * 2. openAi: openAI API 사용을 위한 패키지
- * 3. dotenv: env파일은 환경변수(API KEY 포함)가 선언된 파일이라 
- *            github에는 절대 올려서는 안되는데, 이런식으로 보안적으로 
- *            중요한 값을 .env파일로 따로 관리할 수 있도록 하는 패키지
- * 4. cors: CORS정책으로 서로 다른 출처라도 데이터 통신을 할 수 있게 만들어주는 패키지
- */
-
 import express from "express";
 import cors from "cors";
 import * as dotenv from "dotenv";
 import OpenAI from "openai";
 
+/**
+ *
+ * 1. express: 서버개발을 쉽게 해주는 라이브러리 집합체
+ * 2. openai: openai API 사용을 위한 패키지
+ * 3. dotenv: 보안적으로 중요한 값을 .env파일로 따로 관리할수 있도록 하는 패키지
+ * 4. cors: CORS정책으로 서로 다른 출처라도 데이터 통신할수 있게 만들어주는 패키지
+ */
+
 // Express 애플리케이션 객체 생성
-// 이 객체를 통해 라우터 등록, 미들웨어 설정, 서버 실행 등을 할 수 있음
 const app = express();
 
-//환경변수 로드
+// 환경변수 로드
 dotenv.config();
 
-//cors설정
+// cors 설정
 app.use(cors());
 
 // Json 설정
@@ -27,40 +25,33 @@ app.use(cors());
 app.use(express.json()); // for parsing application/jso
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
-// openAI설정
-
+// openai 설정
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-})
- /*
+});
+
 const chatTest = async () => {
-
-
-  
- 기본 테스트
- try{
-    // 제대로 실행될 때
+  try {
+    // 제대로 실행될때 구문
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", 
+      model: "gpt-4o",
       temperature: 1,
       max_tokens: 4000,
-      messages:[
-      {
-        role: "user",
-        content: "오늘 날씨가 어때?"
-      },
-    ],
+      messages: [
+        {
+          role: "user",
+          content: "오늘 날씨가 어때?",
+        },
+      ],
     });
-    console.log("🚀 ~ chatTest ~ response:", response.choices[0].message)
-  }catch(error){
-    // 에러 발생시
-    console.log(error)
+    console.log("🚀 response:", response.choices[0].message);
+  } catch (error) {
+    // try에서 에러났을때 처리할 구문
+    console.log(error);
   }
-}*/
+};
 
-// app.get("/health", (req, res) => {})
-
-  // 챗봇 api설정
+// 챗봇 api설정
 const initialMessage = (ingredientList) => {
   return [
     {
@@ -78,7 +69,9 @@ const initialMessage = (ingredientList) => {
 
 // 초기 답변
 app.post("/recipe", async (req, res) => {
-  const { ingredientList } = req.body;
+  const { ingredientList } = req.body; // 재료 목록
+
+  // openai에게 보낼 메시지 배열
   const messages = initialMessage(ingredientList);
   try {
     const response = await openai.chat.completions.create({
@@ -90,6 +83,8 @@ app.post("/recipe", async (req, res) => {
     });
     const data = [...messages, response.choices[0].message];
     console.log("data", data);
+
+    // 프론트엔드에게 응답
     res.json({ data });
   } catch (error) {
     console.log(error);
@@ -109,24 +104,16 @@ app.post("/message", async (req, res) => {
       top_p: 1,
     });
     const data = response.choices[0].message;
-    //프론트엔드에게 응답하는 코드
+
+    // 프론트엔드에게 응답
     res.json({ data });
   } catch (error) {
     console.log(error);
   }
 });
 
+// 서버 실행
 app.listen(8080, () => {
   console.log("서버 ON");
   // chatTest();
 });
-
-// // CORS 설정
-// const corsOption = {
-//   origin: process.env.CLIENT_URL,
-//   credentials: true,
-//   allowedHeaders: ["Content-Type", "Authorization"], // 응답헤더 설정
-// };
-
-// app.use(cors(corsOption));
-
